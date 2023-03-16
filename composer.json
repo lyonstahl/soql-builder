@@ -1,32 +1,40 @@
 {
-    "name": "mihasicehcek/php_salesforce_soql_builder",
-    "license": "MIT",
     "type": "library",
+    "license": "Apache-2.0",
+    "name": "lyonstahl/soql-builder",
+    "description": "SOQL builder that simplifies the process of constructing complex queries to retrieve data from Salesforce databases",
+    "keywords": [
+        "soql",
+        "salesforce",
+        "query",
+        "builder"
+    ],
+    "minimum-stability": "RC",
+    "prefer-stable": true,
     "require": {
-        "php": "^7.3 || ^8.0"
+        "php": ">=7.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5"
     },
-    "repositories": [],
     "autoload": {
         "psr-4": {
-            "SalesforceQueryBuilder\\": "src/"
+            "LyonStahl\\SoqlBuilder\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests"
         }
     },
-    "extra": {},
-    "scripts": {},
-    "config": {
-        "preferred-install": "dist",
-        "sort-packages": true,
-        "optimize-autoloader": true
+    "scripts": {
+        "test": [
+            "phpunit"
+        ]
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "description": "SOQL Builder"
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
 }

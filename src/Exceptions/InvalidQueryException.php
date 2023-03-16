@@ -1,9 +1,7 @@
 <?php
 
-namespace SalesforceQueryBuilder\Exceptions;
-
+namespace LyonStahl\SoqlBuilder\Exceptions;
 
 class InvalidQueryException extends \Exception
 {
-
 }

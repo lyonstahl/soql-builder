@@ -1,10 +1,10 @@
 <?php
 
-namespace SalesforceQueryBuilder;
+namespace LyonStahl\SoqlBuilder;
 
-use SalesforceQueryBuilder\Exceptions\InvalidQueryException;
+use LyonStahl\SoqlBuilder\Exceptions\InvalidQueryException;
 
-class QueryBuilder
+class SoqlBuilder
 {
     private $fields = [];
     private $object;
@@ -12,34 +12,59 @@ class QueryBuilder
     private $limit;
     private $offset;
     private $orders = [];
+    private $groupedConditionalStart = [];
+    private $groupedConditionalEnd = [];
 
     public function select(array $fields): self
     {
         $this->fields = array_merge($this->fields, $fields);
+
         return $this;
     }
 
     public function addSelect(string $field): self
     {
         $this->fields[] = $field;
+
         return $this;
     }
 
     public function from(string $object): self
     {
         $this->object = $object;
+
+        return $this;
+    }
+
+    public function startWhere(): self
+    {
+        if (empty($this->where)) {
+            $this->groupedConditionalStart[] = 0;
+        } else {
+            $this->groupedConditionalStart[] = array_key_last($this->where) + 1;
+        }
+
+        return $this;
+    }
+
+    public function endWhere(): self
+    {
+        $this->groupedConditionalEnd[] = array_key_last($this->where);
+
         return $this;
     }
 
     public function where($column, string $operator, $value, $boolean = 'AND'): self
     {
         $this->where[] = [$column, $operator, $this->prepareWhereValue($value), $boolean];
+
         return $this;
     }
 
     public function whereDate($column, string $operator, $value, $boolean = 'AND'): self
     {
-        $this->where[] = [$column, $operator, $this->prepareWhereValue($value, "date"), $boolean];
+        $this->where[] = [$column, $operator, $this->prepareWhereValue($value, 'date'), $boolean];
+
         return $this;
     }
 
@@ -58,6 +83,7 @@ class QueryBuilder
         foreach ($conditions as $condition) {
             $this->where($condition[0], $condition[1], $condition[2], $boolean);
         }
+
         return $this;
     }
 
@@ -67,27 +93,31 @@ class QueryBuilder
             $restriction = $this->prepareWhereValue($restriction);
         }
 
-        $operator = !$not ? "IN" : "NOT IN";
+        $operator = !$not ? 'IN' : 'NOT IN';
 
-        $this->where[] = [$column, $operator, '(' . implode(', ', $restrictions) . ')', $boolean];
+        $this->where[] = [$column, $operator, '('.implode(', ', $restrictions).')', $boolean];
+
         return $this;
     }
 
     public function whereNotIn($column, array $restrictions): self
     {
-        $this->whereIn($column, $restrictions, "AND", true);
+        $this->whereIn($column, $restrictions, 'AND', true);
+
         return $this;
     }
 
     public function orWhereIn($column, array $restrictions): self
     {
         $this->whereIn($column, $restrictions, 'OR');
+
         return $this;
     }
 
     public function orWhereNotIn($column, array $restrictions): self
     {
         $this->whereIn($column, $restrictions, 'OR', true);
+
         return $this;
     }
 
@@ -102,26 +132,34 @@ class QueryBuilder
             $value = $this->prepareWhereValue($value);
         }
 
-        $this->where[] = [$column, null, $function . '(' . $value . ')', $boolean];
+        $this->where[] = [$column, null, $function.'('.$value.')', $boolean];
+
         return $this;
+    }
+
+    private function getGroupExpressionsAtIndex(array $expressionLocations, int $index): int
+    {
+        if (empty($expressionLocations)) {
+            return 0;
+        }
+
+        return count(array_filter($expressionLocations, function ($expressionLocation) use ($index) {
+            return $expressionLocation === $index;
+        }));
     }
 
     private function prepareWhereValue($value, $forceType = null)
     {
-        if ($forceType === "date") {
+        if ($forceType === 'date') {
             return $value;
         }
 
-        if (gettype($value) === "string") {
-            $value = "'" . $value . "'";
-        } else {
-            if (gettype($value) === "boolean") {
-                $value = $value ? 'true' : 'false';
-            } else {
-                if ($value === null) {
-                    $value = "null";
-                }
-            }
+        if (is_string($value)) {
+            $value = "'".$value."'";
+        } elseif (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        } elseif ($value === null) {
+            $value = 'null';
         }
 
         return $value;
@@ -130,18 +168,20 @@ class QueryBuilder
     public function limit(int $limit): self
     {
         $this->limit = $limit;
+
         return $this;
     }
 
     public function offset(int $offset): self
     {
         $this->offset = $offset;
+
         return $this;
     }
 
     public function orderBy(string $column, string $direction = 'ASC'): self
     {
-        $this->orders[] = $column . ' ' . $direction;
+        $this->orders[] = $column.' '.$direction;
 
         return $this;
     }
@@ -159,24 +199,28 @@ class QueryBuilder
         if (!$this->fields) {
             throw new InvalidQueryException('Query must contains fields for select');
         }
+        if (count($this->groupedConditionalStart) !== count($this->groupedConditionalEnd)) {
+            throw new InvalidQueryException('Unmatched parenthesis for grouped expressions. Make sure to call startWhere() and endWhere().');
+        }
 
         $soql = 'SELECT ';
         $soql .= implode(', ', array_unique($this->fields));
-        $soql .= ' FROM ' . $this->object;
+        $soql .= ' FROM '.$this->object;
 
         if (count($this->where) > 0) {
             $soql .= ' WHERE ';
-            for ($i = 0; $i < count($this->where); $i++) {
-                if ($i != 0) {
-                    $soql .= ' ' . $this->where[$i][3] . ' ';
-                }
-                $soql .= implode(
-                    ' ',
-                    array_filter([$this->where[$i][0], $this->where[$i][1], $this->where[$i][2]], function ($item) {
-                        return $item !== null;
-                    })
-                );
+        }
+
+        foreach ($this->where as $i => $iValue) {
+            $iValue[0] = str_repeat('(', $this->getGroupExpressionsAtIndex($this->groupedConditionalStart, $i)).$iValue[0];
+            $iValue[2] .= str_repeat(')', $this->getGroupExpressionsAtIndex($this->groupedConditionalEnd, $i));
+            if ($i !== 0) {
+                $soql .= ' '.$iValue[3].' ';
             }
+            $soql .= implode(' ', array_filter([$iValue[0], $iValue[1], $iValue[2]], function ($item) {
+                return $item !== null;
+            })
+            );
         }
 
         if (count($this->orders) > 0) {
@@ -185,11 +229,11 @@ class QueryBuilder
         }
 
         if ($this->limit) {
-            $soql .= ' LIMIT ' . $this->limit;
+            $soql .= ' LIMIT '.$this->limit;
         }
 
         if ($this->offset) {
-            $soql .= ' OFFSET ' . $this->offset;
+            $soql .= ' OFFSET '.$this->offset;
         }
 
         return $soql;
