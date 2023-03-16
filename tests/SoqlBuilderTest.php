@@ -10,9 +10,8 @@ final class SoqlBuilderTest extends TestCase
 {
     public function testBaseQuery()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Account')
-            ->select(['Id', 'Name', 'Description'])
+        $qb = SoqlBuilder::from('Account')
+            ->addSelect(['Id', 'Name', 'Description'])
             ->where('Name', '=', 'Mikhail')
             ->orderBy('Name')
             ->limit(10)
@@ -24,9 +23,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWithBoolean()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Account')
-            ->select(['Id', 'Name', 'Description'])
+        $qb = SoqlBuilder::from('Account')
+            ->addSelect(['Id', 'Name', 'Description'])
             ->where('IsChecked', '=', true);
 
         $this->assertEquals('SELECT Id, Name, Description FROM Account WHERE IsChecked = true', $qb->toSoql());
@@ -34,9 +32,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWithNumber()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Account')
-            ->select(['Id', 'Name', 'Description'])
+        $qb = SoqlBuilder::from('Account')
+            ->addSelect(['Id', 'Name', 'Description'])
             ->where('Amount', '=', 0);
 
         $this->assertEquals('SELECT Id, Name, Description FROM Account WHERE Amount = 0', $qb->toSoql());
@@ -44,9 +41,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWithSeveralOrders()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Account')
-            ->select(['Id', 'Name', 'Description'])
+        $qb = SoqlBuilder::from('Account')
+            ->addSelect(['Id', 'Name', 'Description'])
             ->orderBy('Name')
             ->orderByDesc('Description');
 
@@ -56,9 +52,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testOrWhere()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Account')
-            ->select(['Id', 'Name', 'Description'])
+        $qb = SoqlBuilder::from('Account')
+            ->addSelect(['Id', 'Name', 'Description'])
             ->orWhere('A', '=', 'B')
             ->orWhere('C', '=', 'D');
 
@@ -67,9 +62,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWhereIn()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->where('G', '=', 'G')
             ->whereIn('Name', ['A', 'B', 'C']);
 
@@ -78,9 +72,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWhereNotIn()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->where('G', '=', 'G')
             ->whereNotIn('Name', ['A', 'B', 'C']);
 
@@ -89,9 +82,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testOrWhereIn()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->where('G', '=', 'G')
             ->orWhereIn('Name', ['A', 'B', 'C']);
 
@@ -100,9 +92,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testOrWhereNotIn()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->where('G', '=', 'G')
             ->orWhereNotIn('Name', ['A', 'B', 'C']);
 
@@ -112,8 +103,7 @@ final class SoqlBuilderTest extends TestCase
     public function testQueryWithoutFields()
     {
         $this->expectException(InvalidQueryException::class);
-        (new SoqlBuilder())
-            ->from('Account')
+        SoqlBuilder::from('Account')
             ->orderBy('Name')
             ->orderByDesc('Description')
             ->toSoql();
@@ -122,8 +112,7 @@ final class SoqlBuilderTest extends TestCase
     public function testQueryWithoutSObject()
     {
         $this->expectException(InvalidQueryException::class);
-        (new SoqlBuilder())
-            ->select(['Id', 'Name', 'Description'])
+        SoqlBuilder::select(['Id', 'Name', 'Description'])
             ->orderBy('Name')
             ->orderByDesc('Description')
             ->toSoql();
@@ -131,9 +120,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testAddSelection()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name']);
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name']);
 
         $qb->addSelect('Description');
 
@@ -142,19 +130,17 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWhereColumns()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
-            ->whereColumn([['A', '>', 3], ['B', '<', 8]]);
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
+            ->whereMultiple([['A', '>', 3], ['B', '<', 8]]);
 
         $this->assertEquals('SELECT Id, Name FROM Acc WHERE A > 3 AND B < 8', $qb->toSoql());
     }
 
     public function testWhereWithNull()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->where('A', '=', null);
 
         $this->assertEquals('SELECT Id, Name FROM Acc WHERE A = null', $qb->toSoql());
@@ -162,9 +148,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWhereWithDate()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->whereDate('A', '=', '2019-10-10');
 
         $this->assertEquals('SELECT Id, Name FROM Acc WHERE A = 2019-10-10', $qb->toSoql());
@@ -172,9 +157,8 @@ final class SoqlBuilderTest extends TestCase
 
     public function testOrWhereWithDate()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
-            ->select(['Id', 'Name'])
+        $qb = SoqlBuilder::from('Acc')
+            ->addSelect(['Id', 'Name'])
             ->whereDate('A', '=', '2019-10-10')
             ->orWhereDate('B', '=', '2019-10-09');
 
@@ -183,8 +167,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testDuplicateSelect()
     {
-        $qb = (new SoqlBuilder())
-            ->from('Acc')
+        $qb = SoqlBuilder::from('Acc')
             ->addSelect('Id');
 
         $qb->addSelect('Id');
@@ -194,8 +177,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWhereFunction()
     {
-        $actual = (new SoqlBuilder())
-            ->from('Object')
+        $actual = SoqlBuilder::from('Object')
             ->addSelect('Id')
             ->whereFunction('F', 'func1', 'chs1')
             ->whereFunction('F', 'func2', 'chs2')
@@ -211,8 +193,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testWhereFunctionByArray()
     {
-        $actual = (new SoqlBuilder())
-            ->from('Object')
+        $actual = SoqlBuilder::from('Object')
             ->addSelect('Id')
             ->whereFunction('F', 'func1', ['chs1;chs2', 'chs3', 'chs4'])
             ->toSoql();
@@ -225,8 +206,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testConditionalExpressionsCanBeGrouped()
     {
-        $actual = (new SoqlBuilder())
-            ->from('Androids__c')
+        $actual = SoqlBuilder::from('Androids__c')
             ->addSelect('Id')
             ->where('Warranty', '=', 'Expired')
             ->startWhere()
@@ -240,8 +220,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testConditionalsCanbeGroupedAlone()
     {
-        $actual = (new SoqlBuilder())
-            ->from('Androids__c')
+        $actual = SoqlBuilder::from('Androids__c')
             ->addSelect('Id')
             ->where('Warranty', '=', 'Expired')
             ->startWhere()
@@ -254,8 +233,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testGroupedConditionalExpressionsCanExistsInMultipleLocations()
     {
-        $actual = (new SoqlBuilder())
-            ->from('Androids__c')
+        $actual = SoqlBuilder::from('Androids__c')
             ->addSelect('Id')
             ->startWhere()
             ->where('Warranty', '=', 'Active')
@@ -272,8 +250,7 @@ final class SoqlBuilderTest extends TestCase
 
     public function testGroupedConditionalExpressionsCanBeNested()
     {
-        $actual = (new SoqlBuilder())
-            ->from('Androids__c')
+        $actual = SoqlBuilder::from('Androids__c')
             ->addSelect('Id')
             ->startWhere()
             ->startWhere()
@@ -295,8 +272,7 @@ final class SoqlBuilderTest extends TestCase
     {
         $this->expectException(InvalidQueryException::class);
 
-        $actual = (new SoqlBuilder())
-            ->from('Androids__c')
+        SoqlBuilder::from('Androids__c')
             ->addSelect('Id')
             ->startWhere()
             ->where('Warranty', '=', 'Active')
@@ -307,8 +283,7 @@ final class SoqlBuilderTest extends TestCase
     {
         $this->expectException(InvalidQueryException::class);
 
-        $actual = (new SoqlBuilder())
-            ->from('')
+        SoqlBuilder::from('')
             ->addSelect('Id')
             ->toSoql();
     }
@@ -317,8 +292,7 @@ final class SoqlBuilderTest extends TestCase
     {
         $this->expectException(InvalidQueryException::class);
 
-        $actual = (new SoqlBuilder())
-            ->from('Androids')
+        SoqlBuilder::from('Androids')
             ->toSoql();
     }
 }

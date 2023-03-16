@@ -4,7 +4,15 @@ SOQL builder that simplifies the process of constructing complex queries to retr
 
 ## Installation
 
+Ensure you have [composer](http://getcomposer.org) installed, then run the following command:
+
     composer require lyonstahl/soql-builder
+
+That will fetch the library and its dependencies inside your vendor folder. Then you need to use the relevant class, for example:
+
+```php
+use LyonStahl\SoqlBuilder\SoqlBuilder;
+```
 
 ## Features
 
@@ -18,12 +26,14 @@ SOQL builder that simplifies the process of constructing complex queries to retr
 -   Offset
 -   Order By
 
-## Example usage
+## Usage
+
+Builder has two entry points for comfortable static usage: `SoqlBuilder::select()` and `SoqlBuilder::from()`. Both methods return a `SoqlBuilder` instance.  
+In any other context, you **must** call `addSelect()` and `setFrom()` to add the "SELECT" and "FROM" statements. See examples below.
 
 ```php
-$builder
-    ->select(['Id', 'Name', 'created_at'])
-    ->from('Account')
+SoqlBuilder::select(['Id', 'Name', 'created_at'])
+    ->setFrom('Account')
     ->where('Name', '=', 'Test')
     ->limit(20)
     ->orderBy('created_at', 'DESC')
@@ -33,9 +43,8 @@ $builder
 `> SELECT Id, Name, created_at FROM Account WHERE Name = 'Test' ORDER BY created_at DESC LIMIT 20`
 
 ```php
-$builder
-    ->select(['Id', 'Name'])
-    ->from('Account')
+SoqlBuilder::from('Account')
+    ->addSelect(['Id', 'Name'])
     ->where('Name', '=', 'Test')
     ->orWhere('Name', '=', 'Testing')
     ->toSoql();
@@ -44,9 +53,8 @@ $builder
 `> SELECT Id, Name FROM Account WHERE Name = 'Test' OR Name = 'Testing'`
 
 ```php
-$builder
-    ->select(['Id', 'Name'])
-    ->from('Account')
+SoqlBuilder::select(['Id', 'Name'])
+    ->setFrom('Account')
     ->startWhere()
     ->where('Name', '=', 'Test')
     ->where('Testing__c', '=', true)
@@ -57,12 +65,22 @@ $builder
 
 `> SELECT Id, Name FROM Account WHERE (Name = 'Test' AND Testing__c = true) OR Email__c = 'test@test.com'`
 
+## Requirements
+
+-   [PHP 7.3+](https://www.php.net)
+-   [Composer 2.0+](https://getcomposer.org)
+-   PHPUnit is required to run the unit tests
+
 ## Running for development with Docker
+
+We have included a Dockerfile to make it easy to run the tests and debug the code. You must have Docker installed. The following commands will build the image and run the container:
 
 1. `docker build -t lyonstahl/soql-builder --build-arg PHP_VERSION=8 .`
 2. `docker run -it --rm -v ${PWD}:/var/www/soql lyonstahl/soql-builder sh`
 
-## Debugging with XDebug and VSCode
+## Debugging with XDebug in VSCode
+
+Docker image is configured with XDebug. To debug the code with VSCode, follow these steps:
 
 1.  Install the [PHP Debug extension](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) in VSCode
 2.  Add a new PHP Debug configuration in VSCode:
@@ -82,6 +100,6 @@ $builder
 
 ## Testing
 
-This library ships with PHPUnit for development.
+This library ships with PHPUnit for development. Composer file has been configured with some scripts, run the following command to run the tests:
 
     composer test

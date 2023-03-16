@@ -12,7 +12,7 @@ COPY . .
 
 RUN composer dump-autoload -o
 
-FROM php:${PHP_VERSION}-fpm-alpine
+FROM php:${PHP_VERSION}-cli-alpine
 
 WORKDIR /var/www/soql
 
@@ -31,5 +31,5 @@ RUN echo "xdebug.mode = develop,coverage,debug" >> ${XDEBUG_PATH} \
     && echo "xdebug.discover_client_host = 0" >> ${XDEBUG_PATH}
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
-COPY --from=build --chown=www-data:www-data /build /var/www/soql
+COPY --from=build /build /var/www/soql
 COPY --from=build /usr/bin/composer /usr/local/bin/composer
