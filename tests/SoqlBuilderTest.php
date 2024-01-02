@@ -17,8 +17,7 @@ final class SoqlBuilderTest extends TestCase
             ->limit(10)
             ->offset(15);
 
-        $this->assertEquals("SELECT Id, Name, Description FROM Account WHERE Name = 'Mikhail' ORDER BY Name ASC LIMIT 10 OFFSET 15",
-            $qb->toSoql());
+        $this->assertEquals("SELECT Id, Name, Description FROM Account WHERE Name = 'Mikhail' ORDER BY Name ASC LIMIT 10 OFFSET 15", (string) $qb);
     }
 
     public function testWithBoolean()

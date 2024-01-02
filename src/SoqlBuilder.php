@@ -460,4 +460,9 @@ class SoqlBuilder
 
         return $soql;
     }
+
+    public function __toString(): string
+    {
+        return $this->toSoql();
+    }
 }

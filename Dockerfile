@@ -18,7 +18,7 @@ WORKDIR /var/www/soql
 
 RUN set -xe \
     && apk add --no-cache -t .build-deps $PHPIZE_DEPS linux-headers \
-    && pecl install -f xdebug-3.2.0 \
+    && pecl install -f xdebug \
     && docker-php-ext-enable xdebug \
     && pecl clear-cache \
     && apk del --purge .build-deps
