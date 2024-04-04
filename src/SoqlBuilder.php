@@ -349,7 +349,7 @@ class SoqlBuilder
         }
 
         if (is_string($value)) {
-            $value = "'".$value."'";
+            $value = "'".addslashes($value)."'";
         } elseif (is_bool($value)) {
             $value = $value ? 'true' : 'false';
         } elseif ($value === null) {
